@@ -177,7 +177,7 @@ def main():
     bombs = [Bomb((255, 0, 0), 10) for _ in range(NUM_OF_BOMBS)]
     
     # ビームとスコアの初期化
-    beam = None
+    beams = []
     score = Score()
     
     clock = pg.time.Clock()
@@ -189,7 +189,7 @@ def main():
                 return
             if event.type == pg.KEYDOWN and event.key == pg.K_SPACE:
                 # スペースキー押下でBeamクラスのインスタンス生成
-                beam = Beam(bird)
+                beams.append(Beam(bird))
         
         screen.blit(bg_img, [0, 0])
         
@@ -207,21 +207,24 @@ def main():
                     return
         
         # ビームと爆弾の衝突判定
-        if beam is not None:
-            for i, bomb in enumerate(bombs):
-                if bomb is not None:
-                    if beam.rct.colliderect(bomb.rct):
-                        # ビームが爆弾に当たったら，爆弾とビームを消す
-                        beam = None
-                        bombs[i] = None
-                        bird.change_img(6, screen)  # 喜びの表情
-                        score.score += 1  # スコアアップ
-                        pg.display.update()
-                        time.sleep(0.1)
-                        break
+        for j, beam in enumerate(beams):
+            if beam is not None:
+                for i, bomb in enumerate(bombs):
+                    if bomb is not None:
+                        if beam.rct.colliderect(bomb.rct):
+                            beams[j] = None
+                            bombs[i] = None
+                            bird.change_img(6, screen)  # 喜びの表情
+                            score.score += 1  # スコアアップ
+                            pg.display.update()
+                            time.sleep(0.1)
+                            break
         
         # Noneでない爆弾だけに更新
         bombs = [bomb for bomb in bombs if bomb is not None]
+
+        # Noneでないビームだけに更新
+        beams = [beam for beam in beams if beam is not None]
         
         # 押下キーの取得
         key_lst = pg.key.get_pressed()
@@ -234,9 +237,11 @@ def main():
             bomb.update(screen)
         
         # ビームの更新
-        if beam is not None:
-            if not beam.update(screen):
-                beam = None  # 画面外に出たらNoneにする
+        valid_beams = []
+        for beam in beams:
+            if beam.update(screen):  # updateがTrueなら画面内
+                valid_beams.append(beam)
+        beams = valid_beams
         
         # スコアの更新
         score.update(screen)
