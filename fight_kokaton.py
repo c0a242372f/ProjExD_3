@@ -169,11 +169,11 @@ class Explosion:
         """
         self.life -= 1
         if self.life > 0:
-            # 画像を交互に切り替えてチラチラ演出（2フレームごと）
+            # 画像を交互に切り替える（2フレームごと）
             self.index = (self.life // 2) % 2
             screen.blit(self.imgs[self.index], self.rct)
 
-class Score:  # クラス名は大文字で始める（PEP8）
+class Score:
     """
     スコア表示に関するクラス
     """
