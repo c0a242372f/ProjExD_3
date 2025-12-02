@@ -142,6 +142,36 @@ class Bomb:
         self.rct.move_ip(self.vx, self.vy)
         screen.blit(self.img, self.rct)
 
+class Explosion:
+    """
+    爆発エフェクトに関するクラス
+    """
+    def __init__(self, bomb: "Bomb"):
+        """
+        爆発エフェクト画像Surfaceを生成する
+        引数 bomb：爆発する爆弾（Bombインスタンス）
+        """
+        img = pg.image.load("fig/explosion.gif")
+        # 元の画像と上下左右反転した画像の2つを用意
+        self.imgs = [
+            img,
+            pg.transform.flip(img, True, True)  # 上下左右反転
+        ]
+        self.rct = self.imgs[0].get_rect()
+        self.rct.center = bomb.rct.center  # 爆弾の中心位置
+        self.life = 10  # 表示時間（フレーム数）
+        self.index = 0  # 画像切り替え用インデックス
+
+    def update(self, screen: pg.Surface):
+        """
+        爆発エフェクトを表示する
+        引数 screen：画面Surface
+        """
+        self.life -= 1
+        if self.life > 0:
+            # 画像を交互に切り替えてチラチラ演出（2フレームごと）
+            self.index = (self.life // 2) % 2
+            screen.blit(self.imgs[self.index], self.rct)
 
 class Score:  # クラス名は大文字で始める（PEP8）
     """
@@ -176,8 +206,9 @@ def main():
     # 複数の爆弾を生成
     bombs = [Bomb((255, 0, 0), 10) for _ in range(NUM_OF_BOMBS)]
     
-    # ビームとスコアの初期化
+    # ビームと爆発とスコアの初期化
     beams = []
+    exprosions = []
     score = Score()
     
     clock = pg.time.Clock()
@@ -212,6 +243,8 @@ def main():
                 for i, bomb in enumerate(bombs):
                     if bomb is not None:
                         if beam.rct.colliderect(bomb.rct):
+                            # 爆発エフェクトを生成
+                            exprosions.append(Explosion(bomb))
                             beams[j] = None
                             bombs[i] = None
                             bird.change_img(6, screen)  # 喜びの表情
@@ -242,6 +275,10 @@ def main():
             if beam.update(screen):  # updateがTrueなら画面内
                 valid_beams.append(beam)
         beams = valid_beams
+
+        # 爆発エフェクトの更新
+        for exprosion in exprosions:
+            exprosion.update(screen)
         
         # スコアの更新
         score.update(screen)
